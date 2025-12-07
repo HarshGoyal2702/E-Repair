@@ -1,16 +1,51 @@
-# React + Vite
+# 🛠️ E-REPAIR SHOP: Modern Electronic Repair Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack web application built using **React** and **Vite** for the client, designed to streamline the repair service process. It features a clean, highly responsive UI built with **Tailwind CSS** and **Shadcn UI** for modularity and a production-grade aesthetic.
 
-Currently, two official plugins are available:
+The application serves three primary user roles: **Customer**, **Worker (Technician)**, and **Admin**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ✨ Features & Technology Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🚀 Key Features
+* **Customer Portal:** Browse services, book repairs, and track repair status in real-time.
+* **Role-Based Access Control (RBAC):** Separate dashboards and authentication flows for Users, Workers, and Admins.
+* **Modular UI:** Theme colors (Primary Blue) are controlled globally via CSS variables, allowing for instant color changes across the entire application.
+* **Professional UI/UX:** Utilizes modern components from Shadcn UI (Cards, Forms, Sheets, Buttons) for accessibility and visual consistency.
+* **Sticky Layout:** Clean, fixed Navbar and persistent Footer structure handled by a global Flexbox container.
 
-## Expanding the ESLint configuration
+### 💻 Technology Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Category | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | React, Vite | Core application development and fast bundling. |
+| **Styling** | Tailwind CSS | Utility-first CSS framework for rapid styling. |
+| **UI Library** | Shadcn UI | Accessible, reusable component library based on Radix UI, styled with Tailwind. |
+| **Routing** | React Router DOM | Client-side routing, including Protected Routes for User/Admin dashboards. |
+| **Icons** | Lucide React | High-quality, customizable icons. |
+| **Backend (Planned)** | Node.js, Express, MongoDB | API development, data storage, and authentication. |
+| **Database** | Mongoose | Object Data Modeling (ODM) for MongoDB. |
+
+---
+
+## ⚙️ Setup and Installation
+
+This project is built using **Vite** and relies on a Node.js environment.
+
+### Prerequisites
+
+* Node.js (Version 20.19+ or 22.12+)
+* npm or yarn
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/HarshGoyal2702/E-Repair.git
+cd repair-shop
+```
+
+
+Adding more... WAIT 
+
+Developer Harsh Goyal & Aman Berwal
