@@ -31,7 +31,7 @@ export default function Footer() {
           
           {/* Column 1: Logo and Contact Info */}
           <div className="col-span-2 md:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center text-3xl font-extrabold text-primary">
+            <Link to="/" className="flex items-center text-3xl font-extrabold text-blue-700">
               <Wrench className="w-7 h-7 mr-2 fill-primary" /> E-Repair
             </Link>
             <p className="text-gray-400 text-sm max-w-xs">
@@ -83,7 +83,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} E-Repair. All rights reserved.
           </p>
           <p className="text-sm text-gray-500 mt-2 md:mt-0">
-            Designed and Developed with Focus on UI/UX
+            Designed and Developed
           </p>
         </div>
       </div>

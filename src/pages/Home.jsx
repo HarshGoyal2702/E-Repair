@@ -98,7 +98,7 @@ export default function Home() {
                 className="flex flex-col sm:flex-row gap-4 mb-10 animate-fade-in"
                 style={{ animationDelay: "300ms" }}
               >
-                <Button asChild size="lg" className="group text-lg px-8 py-3">
+                <Button asChild size="lg" className="group text-white text-lg px-8 py-3">
                   <Link to="/book">
                     Book a Repair
                     <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1 ml-2" />

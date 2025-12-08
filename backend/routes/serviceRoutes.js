@@ -1,9 +1,9 @@
 const express = require("express");
 const { getServices, addService } = require("../controllers/serviceController");
-const auth = require("../middleware/authMiddleware");
+const { authorize } = require("../middleware/auth");
 const router = express.Router();
 
 router.get("/", getServices);
-router.post("/", auth, addService);
+router.post("/", authorize("user"), addService);
 
 module.exports = router;

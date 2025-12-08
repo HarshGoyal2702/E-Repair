@@ -161,8 +161,11 @@ export default function BookRepair() {
               <Input type="file" multiple onChange={handleFileChange} />
             </div>
 
-            {/* Submit Button */}
-            <Button type="submit" className="w-full text-lg" disabled={loading}>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full text-lg bg-blue-700 hover:bg-blue-900 text-white"
+            >
               {loading ? "Submitting..." : "Submit Request"}
             </Button>
           </form>
