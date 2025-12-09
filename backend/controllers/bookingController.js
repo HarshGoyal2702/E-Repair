@@ -1,4 +1,6 @@
 const bookingService = require("../services/bookingService");
+const Booking = require("../models/Booking");
+const User = require("../models/User");
 
 exports.createBooking = async (req, res) => {
   try {
@@ -6,21 +8,26 @@ exports.createBooking = async (req, res) => {
       return res.status(403).json({ msg: "Only users can create bookings" });
     }
 
-    const { deviceType, brand, issue, specialty, serviceAddress, priority } = req.body;
+    let { deviceType, brand, issue, specialty, serviceAddress, priority } =
+      req.body;
 
     // Validate required fields
     if (!deviceType || !brand || !issue || !specialty) {
       return res.status(400).json({
-        msg: "deviceType, brand, issue, and specialty are required"
+        msg: "deviceType, brand, issue, and specialty are required",
       });
     }
-
+    if (serviceAddress && typeof serviceAddress === "string") {
+      serviceAddress = JSON.parse(serviceAddress);
+    }
     // Validate lengths / formats
-    if (issue.length < 5 || issue.length > 500) {
+    if (issue.trim().length < 5 || issue.trim().length > 500) {
       return res.status(400).json({ msg: "Issue must be 5-500 characters" });
     }
     if (deviceType.length > 50 || brand.length > 50) {
-      return res.status(400).json({ msg: "deviceType and brand max 50 characters" });
+      return res
+        .status(400)
+        .json({ msg: "deviceType and brand max 50 characters" });
     }
     if (!["low", "medium", "high"].includes(priority)) {
       req.body.priority = "medium"; // default if invalid
@@ -41,14 +48,16 @@ exports.createBooking = async (req, res) => {
       createdByRoleSnapshot: req.user.role,
     });
 
+    if (req.files && req.files.length > 0) {
+      booking.images = req.files.map((file) => file.path); // save file paths
+      await booking.save();
+    }
     res.status(201).json(booking);
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: err.message });
   }
 };
-
 
 exports.getMyBookings = async (req, res) => {
   try {
@@ -93,14 +102,64 @@ exports.getAllBookings = async (req, res) => {
 
 exports.assignWorker = async (req, res) => {
   try {
-    const booking = await bookingService.assignWorker(
-      req.params.id,
-      req.body.workerId,
-      req.user._id
-    );
-    res.json(booking);
+    // Only admin allowed
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ msg: "Only admin can assign workers" });
+    }
+
+    const { id: bookingId } = req.params;
+
+    if (bookingId.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(bookingId)) {
+      return res.status(400).json({
+        msg: "Invalid Booking ID format. ID must be a 24-character hexadecimal string.",
+      });
+    }
+    const { workerId } = req.body;
+
+    if (!workerId) {
+      return res.status(400).json({ msg: "workerId is required" });
+    }
+    if (workerId.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(workerId)) {
+      return res.status(400).json({
+        msg: "Invalid Worker ID format. workerId must be a 24-character hexadecimal string.",
+      });
+    }
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ msg: "Booking not found" });
+    }
+
+    // Check if user is actually a worker
+    const worker = await User.findById(workerId);
+    if (!worker || worker.role !== "worker") {
+      return res.status(400).json({ msg: "Invalid worker" });
+    }
+
+    // Assign worker + update status
+    booking.worker = workerId;
+
+    booking.statusHistory.push({
+      from: booking.status,
+      to: "assigned",
+      changedBy: req.user._id,
+      role: req.user.role,
+    });
+
+    booking.status = "assigned";
+
+    await booking.save();
+
+    await User.findByIdAndUpdate(workerId, {
+      $push: { assignedRequests: booking._id },
+    });
+    res.json({
+      msg: "Worker assigned successfully",
+      booking,
+    });
   } catch (err) {
-    res.status(400).json({ msg: err.message });
+    console.error(err);
+    res.status(500).json({ msg: err.message });
   }
 };
 
@@ -108,7 +167,10 @@ exports.updateStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const valid = bookingService.VALID_STATUSES.includes(status);
-    if (!valid) return res.status(400).json({ msg: "Invalid status" });
+    if (!valid) {
+      console.error("Invalid status value:", status);
+      return res.status(400).json({ msg: "Invalid status" });
+    }
 
     const booking = await bookingService.updateStatus(
       req.params.id,
@@ -135,10 +197,19 @@ exports.cancelBooking = async (req, res) => {
   }
 };
 
-
 exports.getBookingById = async (req, res) => {
   try {
-    const booking = await bookingService.getBookingById(req.params.id, req.user);
+    const bookingId = req.params.id;
+
+    if (bookingId.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(bookingId)) {
+      return res.status(400).json({
+        msg: "Invalid Booking ID format. ID must be a 24-character hexadecimal string.",
+      });
+    }
+    const booking = await bookingService.getBookingById(
+      req.params.id,
+      req.user
+    );
     res.json(booking);
   } catch (err) {
     res.status(404).json({ msg: err.message });
@@ -148,7 +219,11 @@ exports.getBookingById = async (req, res) => {
 exports.addWorkerNotes = async (req, res) => {
   try {
     const { notes } = req.body;
-    const booking = await bookingService.addWorkerNotes(req.params.id, req.user, notes);
+    const booking = await bookingService.addWorkerNotes(
+      req.params.id,
+      req.user,
+      notes
+    );
     res.json(booking);
   } catch (err) {
     res.status(400).json({ msg: err.message });
@@ -158,10 +233,20 @@ exports.addWorkerNotes = async (req, res) => {
 exports.addAdminNotes = async (req, res) => {
   try {
     const { notes } = req.body;
-    const booking = await bookingService.addAdminNotes(req.params.id, req.user, notes);
+    const { id: bookingId } = req.params;
+
+    if (bookingId.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(bookingId)) {
+      return res.status(400).json({
+        msg: "Invalid Booking ID format. ID must be a 24-character hexadecimal string.",
+      });
+    }
+    const booking = await bookingService.addAdminNotes(
+      bookingId,
+      req.user,
+      notes
+    );
     res.json(booking);
   } catch (err) {
     res.status(400).json({ msg: err.message });
   }
 };
-

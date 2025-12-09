@@ -1,25 +1,29 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { verifyToken } = require("../utils/jwt");
 
 exports.protect = async (req, res, next) => {
   try {
-    let token;
     const authHeader = req.headers.authorization || "";
-    if (authHeader.startsWith("Bearer ")) token = authHeader.split(" ")[1];
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
 
-    if (!token) return res.status(401).json({ msg: "Not authorized, token missing" });
+    if (!token) {
+      return res.status(401).json({ msg: "Unauthorized: token missing" });
+    }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(401).json({ msg: "Not authorized, user not found" });
+    const decoded = verifyToken(token);
+
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) return res.status(401).json({ msg: "Unauthorized: user not found" });
     if (!user.isActive) return res.status(403).json({ msg: "Account disabled" });
 
-    // attach user object (no password)
     req.user = user;
     next();
   } catch (err) {
-    console.error(err);
-    return res.status(401).json({ msg: "Not authorized (invalid token)" });
+    console.error("JWT Error:", err.message);
+    return res.status(401).json({ msg: "Unauthorized: invalid token" });
   }
 };
 

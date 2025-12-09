@@ -16,6 +16,7 @@ const {
 } = require("../controllers/bookingController");
 
 const { protect, authorize } = require("../middleware/auth");
+const validateObjectId = require("../middleware/validateObjectId");
 
 // ─────────────────────────────────
 // Multer setup for images
@@ -30,19 +31,23 @@ router.use(protect);
 // ─────────────────────────────────
 // USER ROUTES
 // ─────────────────────────────────
-router.post(
-  "/", 
-  authorize("user"), 
-  upload.array("images", 5), 
-  createBooking
-);
+router.post("/", authorize("user"), upload.array("images", 5), createBooking);
 
 router.get("/me", authorize("user"), getMyBookings);
-router.get("/:id", authorize("user", "admin", "worker"), getBookingById);
+router.get(
+  "/:id",
+  validateObjectId("id"),
+  authorize("user", "admin", "worker"),
+  getBookingById
+);
 
 // User can cancel own booking (only if not completed)
-router.patch("/:id/cancel", authorize("user"), cancelBooking);
-
+router.patch(
+  "/:id/cancel",
+  validateObjectId("id"),
+  authorize("user"),
+  cancelBooking
+);
 
 // ─────────────────────────────────
 // WORKER ROUTES
@@ -50,11 +55,20 @@ router.patch("/:id/cancel", authorize("user"), cancelBooking);
 router.get("/worker/assigned", authorize("worker"), getWorkerBookings);
 
 // Worker can update status of own assigned jobs
-router.patch("/:id/status", authorize("worker", "admin"), updateStatus);
+router.patch(
+  "/:id/status",
+  validateObjectId("id"),
+  authorize("worker", "admin"),
+  updateStatus
+);
 
 // Worker can add notes
-router.patch("/:id/worker-notes", authorize("worker"), addWorkerNotes);
-
+router.patch(
+  "/:id/worker-notes",
+  validateObjectId("id"),
+  authorize("worker"),
+  addWorkerNotes
+);
 
 // ─────────────────────────────────
 // ADMIN ROUTES
@@ -62,9 +76,19 @@ router.patch("/:id/worker-notes", authorize("worker"), addWorkerNotes);
 router.get("/", authorize("admin"), getAllBookings);
 
 // Assign or reassign worker
-router.patch("/:id/assign", authorize("admin"), assignWorker);
+router.patch(
+  "/:id/assign",
+  validateObjectId("id"),
+  authorize("admin"),
+  assignWorker
+);
 
 // Admin notes
-router.patch("/:id/admin-notes", authorize("admin"), addAdminNotes);
+router.patch(
+  "/:id/admin-notes",
+  validateObjectId("id"),
+  authorize("admin"),
+  addAdminNotes
+);
 
 module.exports = router;

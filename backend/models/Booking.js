@@ -1,6 +1,13 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
-
+const VALID_STATUSES = [
+  "pending",
+  "assigned",
+  "accepted",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
 const bookingSchema = new Schema(
   {
     // ─────────────────────────────────────
@@ -67,7 +74,14 @@ const bookingSchema = new Schema(
     // ─────────────────────────────────────
     status: {
       type: String,
-      enum: ["pending", "assigned", "accepted", "in_progress", "completed", "cancelled"],
+      enum: [
+        "pending",
+        "assigned",
+        "accepted",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
       default: "pending",
       index: true,
     },
@@ -89,18 +103,20 @@ const bookingSchema = new Schema(
     // ─────────────────────────────────────
     // Admin & Worker Notes
     // ─────────────────────────────────────
-    adminNotes: {
-      type: String,
-      trim: true,
-      maxlength: 500,
-    },
-
-    workerNotes: {
-      type: String,
-      trim: true,
-      maxlength: 500,
-    },
-
+    adminNotes: [
+      {
+        content: { type: String, trim: true, maxlength: 500, required: true },
+        changedBy: { type: Schema.Types.ObjectId, ref: "User" }, // Optional: Track which admin left the note
+        changedAt: { type: Date, default: Date.now },
+      },
+    ],
+    workerNotes: [
+      {
+        content: { type: String, trim: true, maxlength: 500, required: true },
+        changedAt: { type: Date, default: Date.now },
+        changedBy: { type: Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
     // ─────────────────────────────────────
     // Financials (optional)
     // ─────────────────────────────────────
@@ -123,14 +139,25 @@ const bookingSchema = new Schema(
     },
 
     statusHistory: [
-      {
-        from: String,
-        to: String,
-        changedBy: { type: Schema.Types.ObjectId, ref: "User" },
-        role: String,
-        changedAt: { type: Date, default: Date.now },
-      },
-    ],
+  {
+    from: {
+      type: String,
+      enum: VALID_STATUSES,
+    },
+    to: {
+      type: String,
+      enum: VALID_STATUSES,
+      required: true,
+    },
+    changedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    role: String,
+    changedAt: { type: Date, default: Date.now },
+  },
+],
 
     isActive: {
       type: Boolean,

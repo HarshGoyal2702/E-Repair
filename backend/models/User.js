@@ -70,27 +70,36 @@ const userSchema = new Schema(
   }
 );
 
-// userSchema.pre("save", function (next) {
-//   const role = this.role;
-//   const specialty = this.specialty;
+userSchema.pre("save", function () { // 💡 FIX: Removed 'next' from the arguments
+    const role = this.role;
 
-//   if (role === "admin") {
-//     this.address = undefined;
-//     this.specialty = undefined;
-//   }
+    // 1. ADMIN Role Cleanup
+    if (role === "admin") {
+        this.address = undefined;
+        this.specialty = undefined;
+        this.assignedRequests = undefined; 
+    }
+    
+    // 2. USER Role Cleanup
+    if (role === "user") {
+        this.specialty = undefined;
+        this.assignedRequests = undefined;
+    }
 
-//   if (role === "user") {
-//     this.specialty = undefined;
-//   }
+    // 3. WORKER Role Validation & Cleanup
+    if (role === "worker") {
+        this.address = undefined;
+        
+        // Validation: Worker must have at least one specialty
+        const specialty = this.specialty;
+        if (!specialty || specialty.length === 0) {
+            // 💡 FIX: Throw the error directly instead of returning next(new Error(...))
+            throw new Error("Worker must have at least one specialty");
+        }
+    }
 
-//   if (role === "worker") {
-//     if (!specialty || specialty.length === 0) {
-//       return next(new Error("Worker must have at least one specialty"));
-//     }
-//   }
-
-//   next();
-// });
+    // No need to call next() anymore. The function finishes, and Mongoose continues the save.
+});
 
 // 2. Query Middleware for 'findOneAndUpdate' (used by .updateOne(), .findByIdAndUpdate(), etc.)
 // Update hook for findOneAndUpdate
