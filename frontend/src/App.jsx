@@ -6,10 +6,14 @@ import { publicRoutes, userRoutes, adminRoutes } from "./Routes";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+// main.jsx or index.jsx
+import "leaflet/dist/leaflet.css";
 
 import "./App.css";
 
 function App() {
+
+
   return (
     <div className="min-h-screen w-full flex flex-col">
       <Navbar />

@@ -250,3 +250,80 @@ exports.addAdminNotes = async (req, res) => {
     res.status(400).json({ msg: err.message });
   }
 };
+// exports.getWorkers = async (req, res) => {
+//   try {
+//     const { specialty } = req.query;
+
+//     let workers = [];
+//     let fallback = false;
+
+//     // Use case-insensitive regex for specialty matching
+//     if (specialty) {
+//       workers = await User.find({
+//         role: "worker",
+//         isAvailable: true,
+//         specialty: { $regex: new RegExp(`^${specialty}$`, "i") }, // Case-insensitive exact match
+//       }).select("name email specialty isAvailable");
+//     }
+
+//     // If no specialty workers found → fallback to ALL available workers
+//     if (!workers || workers.length === 0) {
+//       fallback = true;
+
+//       workers = await User.find({
+//         role: "worker",
+//         isAvailable: true,
+//       }).select("name email specialty isAvailable");
+//     }
+
+//     res.json({
+//       fallback,
+//       count: workers.length,
+//       workers,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ msg: "Failed to fetch workers" });
+//   }
+// };
+
+exports.getWorkers = async (req, res) => {
+  try {
+    const { specialty } = req.query;
+
+    let workers = [];
+    let fallback = false;
+
+    // 1️⃣ Try specialty-based workers
+    if (specialty) {
+      workers = await User.find({
+        role: "worker",
+        isAvailable: true,
+        specialty: {
+          $regex: new RegExp(`^${specialty}$`, "i"),
+        },
+      }).select("name email specialty isAvailable");
+    }
+
+    // 2️⃣ Fallback → all available workers
+    if (!workers || workers.length === 0) {
+      fallback = true;
+
+      workers = await User.find({
+        role: "worker",
+      }).select("name email specialty isAvailable");
+    }
+
+    res.json({
+      fallback,
+      count: workers.length,
+      workers,
+      message: fallback
+        ? "No workers found for this specialty. Showing all available workers."
+        : "Showing workers matching booking specialty.",
+    });
+  } catch (err) {
+    console.error("getWorkers error:", err);
+    res.status(500).json({ msg: "Failed to fetch workers" });
+  }
+};

@@ -13,6 +13,7 @@ const {
   cancelBooking,
   addWorkerNotes,
   addAdminNotes,
+  getWorkers,
 } = require("../controllers/bookingController");
 
 const { protect, authorize } = require("../middleware/auth");
@@ -32,8 +33,13 @@ router.use(protect);
 // USER ROUTES
 // ─────────────────────────────────
 router.post("/", authorize("user"), upload.array("images", 5), createBooking);
+const bookingLoggerMiddleware = (req, res, next) => {
+  console.log("Booking route accessed. Request path:", req.path);
+  next(); // Pass control to the bookingRoutes router
+};
 
-router.get("/me", authorize("user"), getMyBookings);
+router.get("/worker-details", bookingLoggerMiddleware, getWorkers);
+router.get("/my", authorize("user"), getMyBookings);
 router.get(
   "/:id",
   validateObjectId("id"),

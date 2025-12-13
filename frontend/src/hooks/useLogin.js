@@ -1,57 +1,109 @@
-import { useState } from "react";
+// import { useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { useDispatch } from "react-redux";
+// import { loginSuccess } from "../redux/authSlice";
+
+// export const useLogin = () => {
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState("");
+//   const navigate = useNavigate();
+//   const dispatch = useDispatch();
+
+//   const loginUser = async (email, password) => {
+//     setLoading(true);
+//     setError("");
+
+//     try {
+//       const API_URL = "http://localhost:5000/api/auth/login";
+
+//       const res = await fetch(API_URL, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ email, password }),
+//       });
+
+//       const data = await res.json();
+
+//       if (!res.ok) throw new Error(data.msg || "Login failed");
+
+//       // Save to localStorage
+//       localStorage.setItem("token", data.token);
+//       localStorage.setItem("user", JSON.stringify(data.user));
+
+//       // Save to Redux
+//       dispatch(
+//         loginSuccess({
+//           user: data.user,
+//           token: data.token,
+//         })
+//       );
+
+//       // Navigate based on role
+//       const role = data.user.role;
+//       if (role === "admin") navigate("/admin/dashboard");
+//       else if (role === "worker") navigate("/worker/dashboard");
+//       else navigate("/dashboard");
+
+//       return data.user;
+//     } catch (err) {
+//       setError(err.message);
+//       return null;
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return { loading, error, loginUser };
+// };
+
+import { useDispatch, useSelector } from "react-redux";
+import { loginStart, loginSuccess, loginFailure } from "@/redux/authSlice";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { loginSuccess } from "../redux/authSlice";
+import axios from "axios";
 
 export const useLogin = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { loading, error } = useSelector((state) => state.auth);
 
-  const loginUser = async (email, password) => {
-    setLoading(true);
-    setError("");
+  // const loginUser = async (data) => {
+  //   dispatch(loginStart());
+  //   try {
+  //     const res = await axios.post("/api/login", data); // replace with your endpoint
+  //     const { user, token } = res.data;
 
-    try {
-      const API_URL = "http://localhost:5000/api/auth/login";
+  //     dispatch(loginSuccess({ user, token }));
 
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+  //     // Role-based redirect
+  //     if (user.role === "worker") navigate("/worker-dashboard");
+  //     else navigate("/dashboard");
+  //   } catch (err) {
+  //     dispatch(loginFailure(err.response?.data?.message || "Login failed"));
+  //   }
+  // };
+const loginUser = async (data) => {
+  dispatch(loginStart());
+  try {
+    const res = await axios.post("http://localhost:5000/api/auth/login", data); // match backend route
+    const { user, token } = res.data;
 
-      const data = await res.json();
+    // save in Redux
+    dispatch(loginSuccess({ user, token }));
 
-      if (!res.ok) throw new Error(data.msg || "Login failed");
+    // save in localStorage if you need persistence
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
 
-      // Save to localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+    // redirect based on role
+    console.log("Navigating based on role:", user.role);
+    if (user.role === "worker") navigate("/worker-dashboard");
+    else if (user.role === "admin") navigate("/admin/dashboard");
+    else navigate("/dashboard");
 
-      // Save to Redux
-      dispatch(
-        loginSuccess({
-          user: data.user,
-          token: data.token,
-        })
-      );
+  } catch (err) {
+    dispatch(loginFailure(err.response?.data?.msg || "Login failed"));
+  }
+};
 
-      // Navigate based on role
-      const role = data.user.role;
-      if (role === "admin") navigate("/admin/dashboard");
-      else if (role === "worker") navigate("/worker/dashboard");
-      else navigate("/dashboard");
-
-      return data.user;
-    } catch (err) {
-      setError(err.message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { loading, error, loginUser };
+  return { loginUser, loading, error };
 };
